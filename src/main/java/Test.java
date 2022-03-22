@@ -31,7 +31,7 @@ public class Test {
                 // to all Cluster Servers (Nodes)
                 "DB-2")                                           // Default database that DocumentStore will interact with
         ) {
-
+            // Create a new database
 //            DatabaseRecord databaseRecord = new DatabaseRecord(); // Create a new database
 //            databaseRecord.setDatabaseName("MyNewDatabase");
 //            store.maintenance().server().send(new CreateDatabaseOperation(databaseRecord));
@@ -42,50 +42,59 @@ public class Test {
             // and downloads various configurations
             // e.g. cluster topology or client configuration
 
+            // open a session of the store
             IDocumentSession session = store.openSession();
-
+            // create a new employee
             Employee employee = new Employee();
             employee.FirstName = "Yuki";
             employee.LastName = "Bob";
             employee.Title = "Manager";
 
-
+            //insert the new employee to database
             //session.store(employee);
             //session.saveChanges();
 
-
+            // find the employee whose first name is Yuki using document query
             List<Employee> employees_list = session
                     .advanced()
                     .documentQuery(Employee.class)
                     .whereEquals("FirstName", "Yuki")
                     .toList();
 
+            // find the employee id of the employee
             String employeeId = session.advanced().getDocumentId(employees_list.get(0));
-            System.out.println(employeeId + "str is ");
-            System.out.println(employees_list.size() + "employees size is ");
+            System.out.println("employee's ID in db is " + employeeId);
+            System.out.println( "employees size is " + employees_list.size());
+
+            // print all employees whose first name is Yuki
             for (Employee employee1 : employees_list) {
                 System.out.println(employee1);
             }
             Employee employee1 = session.load(Employee.class, employeeId);
             System.out.println(employee1.FirstName);
+
+            // change the title of Yuki to Vice President
             employee1.Title = "Vice President";
+            // Updata the title in the database
             //session.saveChanges();
 
+
+            // check the title again to see if the update is successful
             List<Employee> employees_list2 = session
                     .advanced()
                     .documentQuery(Employee.class)
                     .whereEquals("FirstName", "Yuki")
                     .toList();
-
             System.out.println("New title is" + employees_list2.get(0).Title);
 
-
+            // make query using indexing
             List<CompanyDetails> list = session.query(Company.class)
                     .selectFields(CompanyDetails.class, new QueryData(
                             new String[] { "Name", "Address.City", "Address.Country"  },
                             new String[] { "companyName", "city", "country"})
                     ).toList();
 
+            // print all companies name, city, and country
             for (CompanyDetails companyDetails : list) {
                 System.out.println(companyDetails.companyName);
                 System.out.println(companyDetails.city);
@@ -95,10 +104,11 @@ public class Test {
 
 
             System.out.println("*****************************");
+            // print the RQL(RavenDB Query Language) for "Orders/Totals"
             IndexDefinition index
                     = store.maintenance()
                     .send(new GetIndexOperation("Orders/Totals"));
-            System.out.println("index is " + index.getMaps());
+            System.out.println("RQL is " + index.getMaps());
             System.out.println("*****************************");
 
 
