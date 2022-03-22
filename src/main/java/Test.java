@@ -13,6 +13,7 @@ import net.ravendb.client.serverwide.DatabaseRecord;
 import net.ravendb.client.serverwide.operations.CreateDatabaseOperation;
 import net.ravendb.client.serverwide.operations.DeleteDatabasesOperation;
 import net.ravendb.client.serverwide.operations.GetDatabaseNamesOperation;
+import org.checkerframework.checker.units.qual.C;
 import org.eclipse.jetty.websocket.api.Session;
 
 import java.time.Duration;
@@ -20,21 +21,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-class Menu {
-    public String Id;
-    public String Name;
-    public List<Course> courseList;
 
-}
-class Course {
-    public String name;
-    public double cost;
-    public List<String> allergenics;
-}
 
 public class Test {
-    private static IndexDefinition index;
-
     public static void main(String[] args) {
         try (IDocumentStore store = new DocumentStore(
                 new String[]{ "http://localhost:8080" },        // URL to the Server,
@@ -43,7 +32,10 @@ public class Test {
                 "DB-2")                                           // Default database that DocumentStore will interact with
         ) {
 
-            DocumentConventions conventions = store.getConventions();  // DocumentStore customizations
+//            DatabaseRecord databaseRecord = new DatabaseRecord(); // Create a new database
+//            databaseRecord.setDatabaseName("MyNewDatabase");
+//            store.maintenance().server().send(new CreateDatabaseOperation(databaseRecord));
+
 
             store.initialize();                                        // Each DocumentStore needs to be initialized before use.
             // This process establishes the connection with the Server
@@ -51,60 +43,41 @@ public class Test {
             // e.g. cluster topology or client configuration
 
             IDocumentSession session = store.openSession();
-//            Course course = new Course();
-//            course.name = "Cereal";
-//            course.cost = 1.3;
-//            course.allergenics = Arrays.asList("Peanuts");
-//
-//            Course course2 = new Course();
-//            course2.name = "Waffle";
-//            course2.cost = 3;
-//
-//            Menu menu = new Menu();
-//            menu.Name = "Breakfast Menu";
-//            menu.courseList = new ArrayList<>();
-//            menu.courseList.add(course);
-//            menu.courseList.add(course2);
-//
-//            session.store(menu);
-//
-//            session.saveChanges();
+
+            Employee employee = new Employee();
+            employee.FirstName = "Yuki";
+            employee.LastName = "Bob";
+            employee.Title = "Manager";
 
 
-//            Menu menu = session.load(Menu.class, "menus/1-A");
-//            System.out.println(menu.Name);
-//            //menu.Name = "dinner menu";
-//
-//            List<Menu> menus = session.query(Menu.class).toList();
-//            System.out.println(menus.get(0).Name);
-//            System.out.println(menus.get(0).courseList.get(0).name);
-//            System.out.println(menus.get(0).courseList.get(1).name);
-//
-//            QueryData queryData = new QueryData(
-//                    new String[] { "Name", "Address.city", "Address.country"},
-//                    new String[] { "Name", "City", "Country"});
-//
-//            List<NameCityAndCountry> results = session
-//                    .query(Company.class)
-//                    .selectFields(NameCityAndCountry.class, queryData)
-//                    .toList();
-//
-//
-//            List<String> courses = session.query(Menu.class)
-//                    .selectFields(List.class, "courseList")
-//                    .selectFields(String.class, "name")
-//                    //.whereGreaterThan("cost", 2)
-//
-//                    .toList()
-//                   ;
-//
-//            Menu menu2 = new Menu();
-//            menu2.Name = "lunch Menu";
-//
-//           // session.store(menu2, "menus/7-Z");
-//           // session.saveChanges();
-//            System.out.println(courses.size());
-//            System.out.println(courses.get(0));
+            //session.store(employee);
+            //session.saveChanges();
+
+
+            List<Employee> employees_list = session
+                    .advanced()
+                    .documentQuery(Employee.class)
+                    .whereEquals("FirstName", "Yuki")
+                    .toList();
+
+            String employeeId = session.advanced().getDocumentId(employees_list.get(0));
+            System.out.println(employeeId + "str is ");
+            System.out.println(employees_list.size() + "employees size is ");
+            for (Employee employee1 : employees_list) {
+                System.out.println(employee1);
+            }
+            Employee employee1 = session.load(Employee.class, employeeId);
+            System.out.println(employee1.FirstName);
+            employee1.Title = "Vice President";
+            //session.saveChanges();
+
+            List<Employee> employees_list2 = session
+                    .advanced()
+                    .documentQuery(Employee.class)
+                    .whereEquals("FirstName", "Yuki")
+                    .toList();
+
+            System.out.println("New title is" + employees_list2.get(0).Title);
 
 
             List<CompanyDetails> list = session.query(Company.class)
@@ -120,54 +93,55 @@ public class Test {
                 System.out.println("__________________________");
             }
 
-                        List<String> courses = session.query(Company.class)
 
-                    .selectFields(String.class, "name")
-                    //.whereGreaterThan("cost", 2)
-
-                    .toList()
-                   ;
-
-            System.out.println(courses);
-
+            System.out.println("*****************************");
             IndexDefinition index
                     = store.maintenance()
                     .send(new GetIndexOperation("Orders/Totals"));
+            System.out.println("index is " + index.getMaps());
+            System.out.println("*****************************");
 
 
-            System.out.println(index.getReduce());
-
-
-//            DatabaseRecord databaseRecord = new DatabaseRecord();
-//            databaseRecord.setDatabaseName("MyNewDatabase");
-//            store.maintenance().server().send(new CreateDatabaseOperation(databaseRecord));
-//
-//            store.maintenance().server().send(
-//                    new DeleteDatabasesOperation("MyNewDatabase", true, null, Duration.ofSeconds(30)));1
-
-            GetDatabaseNamesOperation operation = new GetDatabaseNamesOperation(0, 1);
+            GetDatabaseNamesOperation operation = new GetDatabaseNamesOperation(0, 2);
             String[] databaseNames = store.maintenance().server().send(operation);
             System.out.println("*****************************");
             for (String s : databaseNames) {
                 System.out.println(s);
             }
+            System.out.println("*****************************");
 
 
 
 
-            //new Employees_ByFullName().execute(store);
-
-//            List<Employee> employees = session
-//                    .query(Employee.class)
-//                    .whereEquals("FirstName", "Robert")
-//                    .andAlso()
-//                    .whereEquals("LastName", "King")
-//                    .toList();
-
+            System.out.println("*****************************");
             List<Employee> employees = session
+                    .query(Employee.class)
+                    .whereEquals("FirstName", "Robert")
+                    .andAlso()
+                    .whereEquals("LastName", "King")
+                    .toList();
+
+            for (Employee employee02 : employees) {
+                System.out.println(employee02.FirstName);
+                System.out.println(employee02.LastName);
+                System.out.println(employee02.Title);
+            }
+            System.out.println("*****************************");
+
+
+            System.out.println("*****************************");
+            //new Employees_ByFullName().execute(store);
+            employees = session
                     .query(Employee.class, Employees_ByFullName.class)
                     .whereEquals("FullName", "Robert King")
                     .toList();
+            for (Employee employee02 : employees) {
+                System.out.println(employee02.FirstName);
+                System.out.println(employee02.LastName);
+                System.out.println(employee02.Title);
+            }
+            System.out.println("*****************************");
+
 //            List<Employee> results = session
 //                    .query(Employee.class, Employees_ByFirstAndLastName.class)
 //                    .whereEquals("FirstName", "Robert")
@@ -197,11 +171,8 @@ public class Test {
                     .whereEquals("CategoryName", "Beverages")
                     .toList();
 
-            System.out.println(results.size() + "size is");
+            System.out.println("there are " + results.size() + " beverages");
 
-            for (Product p : results) {
-                System.out.println(p.Category);
-            }
 
 
 
